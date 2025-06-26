@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Forward the request to your FastAPI backend
     const apiUrl = process.env.API_URL || 'http://localhost:8000';
