@@ -1,9 +1,6 @@
 import os
 from typing import Any, AsyncIterator, Iterable, List, MutableMapping
-from dotenv import load_dotenv
 from openai import AsyncOpenAI, OpenAI
-
-load_dotenv()
 
 ChatMessage = MutableMapping[str, Any]
 
@@ -24,7 +21,7 @@ class ChatOpenAI:
         """
         self.model_name = model_name
         # Prefer explicit api_key argument, fallback to environment variable
-        self.openai_api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.openai_api_key = api_key 
         if self.openai_api_key is None:
             raise ValueError("OPENAI_API_KEY is not set and no api_key was provided.")
 
