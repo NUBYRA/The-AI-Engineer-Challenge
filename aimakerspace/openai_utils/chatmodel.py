@@ -61,7 +61,7 @@ class ChatOpenAI:
         """Yield streaming completion chunks as they arrive from the API."""
 
         message_list = self._coerce_messages(messages)
-        stream = await self._async_client.chat.completions.create(
+        stream = self._async_client.chat.completions.create(
             model=self.model_name, messages=message_list, stream=True, **kwargs
         )
 
