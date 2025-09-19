@@ -59,11 +59,20 @@ export default function Home() {
       }
 
       const result = await response.json();
-      const assistantResponse = result.message || 'No response received';
       
-      // Update conversation with response
-      const assistantMessage: ChatMessage = { role: 'assistant', content: assistantResponse };
-      setConversationHistory([...updatedHistory, assistantMessage]);
+      if (result.error) {
+        // Handle error response
+        const errorMessage: ChatMessage = { 
+          role: 'assistant', 
+          content: `Error: ${result.error}` 
+        };
+        setConversationHistory([...updatedHistory, errorMessage]);
+      } else {
+        // Handle success response
+        const assistantResponse = result.message || 'No response received';
+        const assistantMessage: ChatMessage = { role: 'assistant', content: assistantResponse };
+        setConversationHistory([...updatedHistory, assistantMessage]);
+      }
     } catch (error) {
       console.error('Error:', error);
       const errorMessage: ChatMessage = { 

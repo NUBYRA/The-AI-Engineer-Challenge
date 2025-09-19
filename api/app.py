@@ -7,6 +7,7 @@ from pydantic import BaseModel
 # Import OpenAI client for interacting with OpenAI's API
 from typing import Optional, List, Dict, Any
 import uvicorn
+from openai import OpenAI
 
 
 # Initialize FastAPI application with a title
@@ -34,7 +35,23 @@ class ChatRequest(BaseModel):
 # Define the main chat endpoint that handles POST requests
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    return {"message": "Hello! This is a test response. Your API is working."}
+    try:
+        # Test OpenAI directly
+        client = OpenAI(api_key=request.api_key)
+        
+        response = client.chat.completions.create(
+            model=request.model,
+            messages=[
+                {"role": "system", "content": request.system_message},
+                {"role": "user", "content": request.current_user_message}
+            ],
+            max_tokens=100
+        )
+        
+        return {"message": response.choices[0].message.content}
+        
+    except Exception as e:
+        return {"error": f"OpenAI error: {str(e)}"}
 
 # Define a health check endpoint to verify API status
 @app.get("/api/health")
