@@ -36,6 +36,10 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     try:
+        print(f"Debug - Starting ChatOpenAI test")
+        print(f"Debug - API Key length: {len(request.api_key) if request.api_key else 0}")
+        print(f"Debug - Model: {request.model}")
+        
         # Build messages with conversation history
         messages = []
         
@@ -49,15 +53,30 @@ async def chat(request: ChatRequest):
         # Add current user message
         messages.append({"role": "user", "content": request.current_user_message})
         
-        # Use ChatOpenAI wrapper
-        chat_model = ChatOpenAI(model_name=request.model, api_key=request.api_key)
+        print(f"Debug - Messages built: {len(messages)}")
+        print(f"Debug - Messages: {messages}")
         
-        # Use the run method (non-streaming)
-        response = chat_model.run(messages, text_only=True)
+        # Test ChatOpenAI initialization
+        try:
+            print("Debug - Initializing ChatOpenAI...")
+            chat_model = ChatOpenAI(model_name=request.model, api_key=request.api_key)
+            print("Debug - ChatOpenAI initialized successfully")
+        except Exception as init_error:
+            print(f"Debug - ChatOpenAI init error: {init_error}")
+            return {"error": f"ChatOpenAI init failed: {str(init_error)}"}
         
-        return {"message": response}
+        # Test the run method
+        try:
+            print("Debug - Calling chat_model.run...")
+            response = chat_model.run(messages, text_only=True)
+            print(f"Debug - Response received: {response[:100]}...")
+            return {"message": response}
+        except Exception as run_error:
+            print(f"Debug - Run method error: {run_error}")
+            return {"error": f"ChatOpenAI run failed: {str(run_error)}"}
         
     except Exception as e:
+        print(f"Debug - Main error: {e}")
         return {"error": f"ChatOpenAI error: {str(e)}"}
 
 # Define a health check endpoint to verify API status
