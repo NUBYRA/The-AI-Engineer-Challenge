@@ -7,6 +7,12 @@ from pydantic import BaseModel
 # Import OpenAI client for interacting with OpenAI's API
 from typing import Optional, List, Dict, Any
 import uvicorn
+import sys
+import os
+
+# Add the parent directory to Python path to find aimakerspace module
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from aimakerspace.openai_utils.chatmodel import ChatOpenAI
     print("Debug - ChatOpenAI import successful")
