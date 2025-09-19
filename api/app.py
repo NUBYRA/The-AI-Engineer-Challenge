@@ -7,7 +7,12 @@ from pydantic import BaseModel
 # Import OpenAI client for interacting with OpenAI's API
 from typing import Optional, List, Dict, Any
 import uvicorn
-from aimakerspace.openai_utils.chatmodel import ChatOpenAI
+try:
+    from aimakerspace.openai_utils.chatmodel import ChatOpenAI
+    print("Debug - ChatOpenAI import successful")
+except ImportError as e:
+    print(f"Debug - ChatOpenAI import failed: {e}")
+    ChatOpenAI = None
 
 
 # Initialize FastAPI application with a title
@@ -39,6 +44,10 @@ async def chat(request: ChatRequest):
         print(f"Debug - Starting ChatOpenAI test")
         print(f"Debug - API Key length: {len(request.api_key) if request.api_key else 0}")
         print(f"Debug - Model: {request.model}")
+        
+        # Check if ChatOpenAI was imported successfully
+        if ChatOpenAI is None:
+            return {"error": "ChatOpenAI import failed - aimakerspace module not found"}
         
         # Build messages with conversation history
         messages = []
