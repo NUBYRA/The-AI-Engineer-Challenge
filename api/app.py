@@ -7,7 +7,7 @@ from pydantic import BaseModel
 # Import OpenAI client for interacting with OpenAI's API
 from typing import Optional, List, Dict, Any
 import uvicorn
-from openai import OpenAI
+from aimakerspace.openai_utils.chatmodel import ChatOpenAI
 
 
 # Initialize FastAPI application with a title
@@ -36,22 +36,29 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     try:
-        # Test OpenAI directly
-        client = OpenAI(api_key=request.api_key)
+        # Build messages with conversation history
+        messages = []
         
-        response = client.chat.completions.create(
-            model=request.model,
-            messages=[
-                {"role": "system", "content": request.system_message},
-                {"role": "user", "content": request.current_user_message}
-            ],
-            max_tokens=100
-        )
+        # Add system message
+        if request.system_message:
+            messages.append({"role": "system", "content": request.system_message})
         
-        return {"message": response.choices[0].message.content}
+        # Add conversation history
+        messages.extend(request.conversation_history)
+        
+        # Add current user message
+        messages.append({"role": "user", "content": request.current_user_message})
+        
+        # Use ChatOpenAI wrapper
+        chat_model = ChatOpenAI(model_name=request.model, api_key=request.api_key)
+        
+        # Use the run method (non-streaming)
+        response = chat_model.run(messages, text_only=True)
+        
+        return {"message": response}
         
     except Exception as e:
-        return {"error": f"OpenAI error: {str(e)}"}
+        return {"error": f"ChatOpenAI error: {str(e)}"}
 
 # Define a health check endpoint to verify API status
 @app.get("/api/health")
