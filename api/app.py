@@ -36,37 +36,11 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     try:
-        print(f"Received request: model={request.model}, api_key_length={len(request.api_key) if request.api_key else 0}")
-        print(f"Conversation history length: {len(request.conversation_history)}")
-        print(f"Current message: {request.current_user_message}")
-        
-        # Initialize the chat model
-        chat_model = ChatOpenAI(model_name=request.model, api_key=request.api_key)
-        
-        # Create an async generator function for streaming responses
-        async def generate():
-            try:
-                # Build messages from conversation history + current user message
-                messages = []
-                if request.system_message:
-                    messages.append({"role": "system", "content": request.system_message})
-                messages.extend(request.conversation_history)
-                messages.append({"role": "user", "content": request.current_user_message})
-                
-                print(f"Built messages: {len(messages)} total")
-                print(f"Messages: {messages}")
-                
-                # Yield each chunk of the response as it becomes available
-                async for chunk in chat_model.astream(messages):
-                    if chunk is not None:
-                        yield chunk
-                        
-            except Exception as stream_error:
-                print(f"Stream error: {stream_error}")
-                yield f"Error: {str(stream_error)}"
-
-        # Return a streaming response to the client
-        return StreamingResponse(generate(), media_type="text/plain")
+        # Simple test first
+        return StreamingResponse(
+            iter(["Hello! This is a test response. Your API is working."]), 
+            media_type="text/plain"
+        )
     
     except Exception as e:
         print(f"Main error: {e}")
