@@ -58,23 +58,12 @@ export default function Home() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      let assistantResponse = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = new TextDecoder().decode(value);
-        assistantResponse += chunk;
-        
-        // Update conversation with streaming response
-        const assistantMessage: ChatMessage = { role: 'assistant', content: assistantResponse };
-        setConversationHistory([...updatedHistory, assistantMessage]);
-      }
+      const result = await response.json();
+      const assistantResponse = result.message || 'No response received';
+      
+      // Update conversation with response
+      const assistantMessage: ChatMessage = { role: 'assistant', content: assistantResponse };
+      setConversationHistory([...updatedHistory, assistantMessage]);
     } catch (error) {
       console.error('Error:', error);
       const errorMessage: ChatMessage = { 
