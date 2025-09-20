@@ -31,9 +31,12 @@ def build_enhanced_system_message(user_message: str) -> str:
 
     # The base system message for the assistant. This message is shown to the model as context.
     base_message = (
-        "You are a helpful health assistant. "
-        "If the question is not related to health, "
-        "say 'I'm sorry, I can only answer questions related to health.'"
+        "You are a helpful health assistant specializing in analyzing health records and lab results. "
+        "You can help users understand their medical data, explain test results, and provide health insights. "
+        "Always provide clear, accurate, and helpful responses about health topics. "
+        "If a question is not health-related, politely redirect the conversation to health topics "
+        "by saying: 'I'm a health assistant focused on helping with medical questions. "
+        "How can I help you understand your health data or answer health-related questions?'"
     )
 
     # If no documents have been uploaded, return the base system message.
@@ -56,12 +59,19 @@ def build_enhanced_system_message(user_message: str) -> str:
             # Extract text from tuples (text, similarity_score)
             context_parts = [chunk[0] for chunk in relevant_chunks]
             context = "\n".join(context_parts)
+            # Build the aligned system message with relevant context.
+            # Build the aligned system message with relevant context.
+            # This message is carefully formatted for clarity and to avoid syntax issues.
             aligned_message = (
                 f"{base_message}\n\n"
                 "IMPORTANT: You have access to uploaded health records. "
-                "Align your answer with the following relevant context when responding to the user's question:\n\n"
+                "Use the following context to answer the user's question about their health record:\n\n"
                 f"{context}\n\n"
-                "Please answer based on this context when possible."
+                "Guidelines for responses:\n"
+                "- If the question is directly about the health record content, provide a detailed answer based on the context.\n"
+                "- If the question is health-related but not specific to this record, provide a general health response.\n"
+                "- If the question is completely unrelated to health, politely redirect to health topics.\n"
+                "- Always be helpful and informative when discussing health matters."
             )
             return aligned_message
 
