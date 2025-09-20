@@ -108,6 +108,7 @@ export default function Home() {
       setUploadStatus(result.message);
     } catch (error) {
       setUploadStatus('Upload failed');
+      console.error('Upload error:', error);
     }
   };
 
