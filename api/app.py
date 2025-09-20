@@ -69,7 +69,7 @@ def build_enhanced_system_message(user_message: str) -> str:
                 f"{context}\n\n"
                 "Guidelines for responses:\n"
                 "- If the question is directly about the health record content, provide a detailed answer based on the context.\n"
-                "- If the question is health-related but not specific to this record, provide a general health response.\n"
+                "- If the question is health-related but not specific to this record, first mention it is unrelated to the uploaded health record and then provide a general health response to the quesiton asked.\n"
                 "- If the question is completely unrelated to health, politely redirect to health topics.\n"
                 "- Always be helpful and informative when discussing health matters."
             )
