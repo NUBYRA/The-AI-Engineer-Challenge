@@ -1,8 +1,12 @@
 import asyncio
+import os
+import sys
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
-
 import numpy as np
+from dotenv import load_dotenv
 
+# Add project root to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aimakerspace.openai_utils.embedding import EmbeddingModel
 
 
@@ -21,9 +25,10 @@ def cosine_similarity(vector_a: np.ndarray, vector_b: np.ndarray) -> float:
 class VectorDatabase:
     """Minimal in-memory vector store backed by numpy arrays."""
 
-    def __init__(self, embedding_model: Optional[EmbeddingModel] = None):
+    def __init__(self, embedding_model: Optional[EmbeddingModel] = None, api_key: str = None):
         self.vectors: Dict[str, np.ndarray] = {}
-        self.embedding_model = embedding_model or EmbeddingModel()
+        self.api_key = api_key
+        self.embedding_model = embedding_model or EmbeddingModel(api_key=api_key)
 
     def insert(self, key: str, vector: Iterable[float]) -> None:
         """Store ``vector`` so that it can be retrieved with ``key`` later on."""
@@ -87,7 +92,12 @@ if __name__ == "__main__":
         "Look at this cute hamster munching on a piece of broccoli.",
     ]
 
-    vector_db = VectorDatabase()
+    # Load .env file from project root (one level up from this file)
+    env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    load_dotenv(env_path, override=True)
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    vector_db = VectorDatabase(api_key=api_key)
     vector_db = asyncio.run(vector_db.abuild_from_list(list_of_text))
     k = 2
 
