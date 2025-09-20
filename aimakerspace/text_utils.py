@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Iterable, List
 import PyPDF2
+from pdf2image import convert_from_path
+import pytesseract
 
 
 class TextFileLoader:
@@ -125,14 +127,34 @@ class PDFLoader:
                 yield self._read_pdf(entry)
 
     def _read_pdf(self, file_path: Path) -> str:
-        with file_path.open("rb") as file_handle:
-            pdf_reader = PyPDF2.PdfReader(file_handle)
-            extracted_pages = [page.extract_text() or "" for page in pdf_reader.pages]
-        return "\n".join(extracted_pages)
+        # Try PyPDF2 first (faster for text-based PDFs)
+        try:
+            with file_path.open("rb") as file_handle:
+                pdf_reader = PyPDF2.PdfReader(file_handle)
+                extracted_pages = [page.extract_text() or "" for page in pdf_reader.pages]
+            text = "\n".join(extracted_pages)
+            if text.strip():  # If we got text, use it
+                return text
+        except Exception as e:
+            print(f"PyPDF2 failed: {e}")
+        
+        # Fallback to OCR for complex/image-based PDFs
+        try:
+            print("Falling back to OCR processing...")
+            images = convert_from_path(file_path)
+            extracted_text = []
+            for i, image in enumerate(images):
+                print(f"Processing page {i+1}/{len(images)} with OCR...")
+                text = pytesseract.image_to_string(image)
+                extracted_text.append(text)
+            return "\n".join(extracted_text)
+        except Exception as e:
+            print(f"OCR processing failed: {e}")
+            return ""
 
 
 if __name__ == "__main__":
-    loader = TextFileLoader("data/KingLear.txt")
+    loader = PDFLoader("sample_labcorp.pdf")
     loader.load()
     splitter = CharacterTextSplitter()
     chunks = splitter.split_texts(loader.documents)
