@@ -21,6 +21,61 @@ from aimakerspace.openai_utils.chatmodel import ChatOpenAI
 # Global storage for vector database
 global_vector_db = None
 
+def build_enhanced_system_message(user_message: str) -> str:
+    """
+    Build an aligned system message, incorporating relevant document context if available.
+    The message is structured to ensure the assistant's responses are aligned with both
+    the user's query and any highly relevant uploaded health records.
+    """
+    global global_vector_db
+
+    base_message = (
+        "You are a helpful health assistant. "
+        "Only answer questions that are related to the uploaded health record. "
+        "If the question is not related to the uploaded health record, "
+        "say 'I'm sorry, I can only answer questions related to the uploaded health record.'"
+        "if the question is not at all related to Health, "
+        "say 'I'm sorry, I can only answer questions related to Health.'"
+    )
+
+    # If no documents have been uploaded, return the base system message.
+    if not global_vector_db:
+        return base_message
+
+    try:
+        # Retrieve the top 3 most relevant document chunks for the user's message.
+        relevant_chunks = global_vector_db.search_by_text(user_message, k=3)
+
+        # If no relevant chunks are found, return the base system message.
+        if not relevant_chunks:
+            return base_message
+
+        # Collect only highly relevant chunks (similarity > 0.7) for context.
+        context_parts = [
+            f"• {chunk}"
+            for chunk, similarity in relevant_chunks
+            if similarity > 0.6
+        ]
+
+        # If there are relevant context parts, align the system message to include them.
+        if context_parts:
+            context = "\n".join(context_parts)
+            aligned_message = (
+                f"{base_message}\n\n"
+                "IMPORTANT: You have access to uploaded health records. "
+                "Align your answer with the following relevant context when responding to the user's question:\n\n"
+                f"{context}\n\n"
+                "Please answer based on this context when possible."
+            )
+            return aligned_message
+
+    except Exception as e:
+        print(f"Error retrieving context: {e}")
+
+    # Fallback to the base message if no context is available or an error occurs.
+    return base_message
+
+
 # Initialize FastAPI application with a title
 app = FastAPI(title="OpenAI Chat API")
 
@@ -52,8 +107,11 @@ async def chat(request: ChatRequest):
         # Build messages with conversation history
         messages = []
         
+        # Build the system message
+        system_message = build_enhanced_system_message(request.current_user_message)
+
         # Add system message
-        messages.append({"role": "system", "content": "You are a helpful health assistant."})
+        messages.append({"role": "system", "content": system_message})
         
         # Add conversation history
         messages.extend(request.conversation_history)
@@ -135,6 +193,7 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
     except Exception as e:
         print(f"Upload error: {e}")  # Debug logging
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Define a health check endpoint to verify API status
 @app.get("/api/health")
