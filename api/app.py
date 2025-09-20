@@ -31,10 +31,7 @@ def build_enhanced_system_message(user_message: str) -> str:
 
     base_message = (
         "You are a helpful health assistant. "
-        "Only answer questions that are related to the uploaded health record. "
-        "If the question is not related to the uploaded health record, "
-        "say 'I'm sorry, I can only answer questions related to the uploaded health record.'"
-        "if the question is not at all related to Health, "
+        "If the question is not at all related to Health, "
         "say 'I'm sorry, I can only answer questions related to Health.'"
     )
 
@@ -140,15 +137,15 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # Create tmp directory if it doesn't exist (use current directory)
-        tmp_dir = "uploads"
+        # Create tmp directory if it doesn't exist (use absolute path)
+        tmp_dir = os.path.join(os.path.dirname(__file__), "uploads")
         os.makedirs(tmp_dir, exist_ok=True)
         
         # Read file content
         content = await file.read()
         
         # Save the uploaded file
-        file_path = f"{tmp_dir}/{file.filename}"
+        file_path = os.path.join(tmp_dir, file.filename)
         with open(file_path, "wb") as f:
             f.write(content)
 
