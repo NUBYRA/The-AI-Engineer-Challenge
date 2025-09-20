@@ -147,14 +147,15 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # Create tmp directory if it doesn't exist
-        os.makedirs("tmp", exist_ok=True)
+        # Create tmp directory if it doesn't exist (use current directory)
+        tmp_dir = "uploads"
+        os.makedirs(tmp_dir, exist_ok=True)
         
         # Read file content
         content = await file.read()
         
         # Save the uploaded file
-        file_path = f"tmp/{file.filename}"
+        file_path = f"{tmp_dir}/{file.filename}"
         with open(file_path, "wb") as f:
             f.write(content)
 
@@ -180,7 +181,7 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
             print(f"Error building vector database: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to build vector database: {str(e)}")
 
-        # delete file_path
+        # Clean up uploaded file
         os.remove(file_path)
 
         return {
