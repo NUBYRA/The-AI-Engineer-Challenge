@@ -95,7 +95,7 @@ export default function Home() {
       
       const result = await response.json();
       if (result.message) {
-        setUploadStatus(`✅ ${result.message} (${result.filename || 'File'}, ${result.size ? Math.round(result.size/1024) + 'KB' : 'Unknown size'})`);
+        setUploadStatus(`✅ ${result.message} (${result.filename || 'File'}, ${result.file_size ? Math.round(result.file_size/1024) + 'KB' : 'Unknown size'})`);
       } else {
         setUploadStatus('✅ PDF uploaded successfully');
       }

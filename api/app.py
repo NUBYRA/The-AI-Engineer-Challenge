@@ -31,8 +31,9 @@ def build_enhanced_system_message(user_message: str) -> str:
 
     base_message = (
         "You are a helpful health assistant. "
-        "If the question is not at all related to Health, "
-        "say 'I'm sorry, I can only answer questions related to Health.'"
+        "Only answer questions that are related to the uploaded health record. "
+        "If the question is not related to the uploaded health record, "
+        "say 'I'm sorry, I can only answer questions related to the uploaded health record.'"
     )
 
     # If no documents have been uploaded, return the base system message.
@@ -40,11 +41,13 @@ def build_enhanced_system_message(user_message: str) -> str:
         return base_message
 
     try:
-        # Retrieve the top 3 most relevant document chunks for the user's message.
+        # Retrieve the top 5 most relevant document chunks for the user's message.
         relevant_chunks = global_vector_db.search_by_text(user_message, k=5)
+        print(f"Found {len(relevant_chunks)} relevant chunks for query: {user_message}")
 
         # If no relevant chunks are found, return the base system message.
         if not relevant_chunks:
+            print("No relevant chunks found, using base message")
             return base_message
 
         # If there are relevant context parts, align the system message to include them.
