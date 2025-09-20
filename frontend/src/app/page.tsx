@@ -15,6 +15,7 @@ export default function Home() {
   const [currentMessage, setCurrentMessage] = useState('');
   const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   const models = [
     'gpt-4o-mini',
@@ -91,6 +92,25 @@ export default function Home() {
     setConversationHistory([]);
   };
 
+  const handleFileUpload = async (file: File) => {
+    setUploadStatus('Uploading...');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await fetch('/api/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const result = await response.json();
+      setUploadStatus(result.message);
+    } catch (error) {
+      setUploadStatus('Upload failed');
+    }
+  };
+
   return (
     <main className={styles.main}>
       <div className={styles.chatContainer}>
@@ -128,17 +148,36 @@ export default function Home() {
               </select>
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="systemMessage">System Message (Optional):</label>
-              <textarea
-                id="systemMessage"
-                value={systemMessage}
-                onChange={(e) => setSystemMessage(e.target.value)}
-                placeholder="Enter the system message (optional)"
-                className={styles.textarea}
-                rows={2}
-              />
-            </div>
+                   <div className={styles.formGroup}>
+                     <label htmlFor="systemMessage">System Message (Optional):</label>
+                     <textarea
+                       id="systemMessage"
+                       value={systemMessage}
+                       onChange={(e) => setSystemMessage(e.target.value)}
+                       placeholder="Enter the system message (optional)"
+                       className={styles.textarea}
+                       rows={2}
+                     />
+                   </div>
+
+                   <div className={styles.formGroup}>
+                     <label htmlFor="pdfUpload">Upload PDF:</label>
+                     <input
+                       type="file"
+                       id="pdfUpload"
+                       accept=".pdf"
+                       onChange={(e) => {
+                         const file = e.target.files?.[0];
+                         if (file) handleFileUpload(file);
+                       }}
+                       className={styles.input}
+                     />
+                     {uploadStatus && (
+                       <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                         {uploadStatus}
+                       </div>
+                     )}
+                   </div>
 
             <button 
               type="button" 
