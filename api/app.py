@@ -79,20 +79,32 @@ async def chat(request: ChatRequest):
 @app.post("/api/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
+        # Check if file was uploaded
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file uploaded")
+            
         # Check file type
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # Create uploads directory if it doesn't exist
+        # Create tmp directory if it doesn't exist
         os.makedirs("tmp", exist_ok=True)
+        
+        # Read file content
+        content = await file.read()
         
         # Save the uploaded file
         file_path = f"tmp/{file.filename}"
         with open(file_path, "wb") as f:
-            f.write(await file.read())
+            f.write(content)
 
-        return {"message": "PDF uploaded successfully"}
+        return {
+            "message": "PDF uploaded successfully",
+            "filename": file.filename,
+            "size": len(content)
+        }
     except Exception as e:
+        print(f"Upload error: {e}")  # Debug logging
         raise HTTPException(status_code=500, detail=str(e))
 
 # Define a health check endpoint to verify API status
