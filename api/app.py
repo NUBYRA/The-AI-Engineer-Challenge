@@ -29,14 +29,19 @@ def build_enhanced_system_message(user_message: str) -> str:
     """
     global global_vector_db
 
-    base_message = ("You are a helpful health assistant. "
-                    "Answer questions about the uploaded health record based on the provided context.")
+    # The base system message for the assistant. This message is shown to the model as context.
+    base_message = (
+        "You are a helpful health assistant. "
+        "If the question is not related to health, "
+        "say 'I'm sorry, I can only answer questions related to health.'"
+    )
 
     # If no documents have been uploaded, return the base system message.
     if not global_vector_db:
         return base_message
 
     try:
+        context_parts = []
         # Retrieve the top 5 most relevant document chunks for the user's message.
         relevant_chunks = global_vector_db.search_by_text(user_message, k=5)
         print(f"Found {len(relevant_chunks)} relevant chunks for query: {user_message}")
@@ -49,7 +54,14 @@ def build_enhanced_system_message(user_message: str) -> str:
         # If there are relevant context parts, align the system message to include them.
         if relevant_chunks:
             # Extract text from tuples (text, similarity_score)
-            context_parts = [chunk[0] for chunk in relevant_chunks]
+            # Only include chunks with similarity > 0.6 in the context_parts list
+            context_parts = []
+            for chunk, similarity in relevant_chunks:
+                if similarity > 0.6:
+                    context_parts.append(chunk)
+            if len(context_parts) == 0:
+                print("No relevant chunks found with sufficient similarity, using base message")
+                return base_message
             context = "\n".join(context_parts)
             aligned_message = (
                 f"{base_message}\n\n"
