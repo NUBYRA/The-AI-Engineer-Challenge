@@ -83,8 +83,12 @@ async def upload_pdf(file: UploadFile = File(...)):
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
+        # Create uploads directory if it doesn't exist
+        os.makedirs("tmp", exist_ok=True)
+        
         # Save the uploaded file
-        with open(f"uploads/{file.filename}", "wb") as f:
+        file_path = f"tmp/{file.filename}"
+        with open(file_path, "wb") as f:
             f.write(await file.read())
 
         return {"message": "PDF uploaded successfully"}
