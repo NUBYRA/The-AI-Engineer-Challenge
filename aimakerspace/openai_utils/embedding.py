@@ -1,26 +1,21 @@
 import asyncio
 import os
 from typing import Iterable, List
-
-from dotenv import load_dotenv
 from openai import AsyncOpenAI, OpenAI
+from dotenv import load_dotenv
 
 
 class EmbeddingModel:
     """Helper for generating embeddings via the OpenAI API."""
 
-    def __init__(self, embeddings_model_name: str = "text-embedding-3-small"):
-        load_dotenv()
-        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+    def __init__(self, embeddings_model_name: str = "text-embedding-3-small", api_key: str = None):
+        self.openai_api_key = api_key
         if self.openai_api_key is None:
-            raise ValueError(
-                "OPENAI_API_KEY environment variable is not set. "
-                "Please configure it with your OpenAI API key."
-            )
+            raise ValueError("OPENAI_API_KEY is not set and no api_key was provided.")
 
         self.embeddings_model_name = embeddings_model_name
-        self.async_client = AsyncOpenAI()
-        self.client = OpenAI()
+        self.async_client = AsyncOpenAI(api_key=self.openai_api_key)
+        self.client = OpenAI(api_key=self.openai_api_key)
 
     async def async_get_embeddings(self, list_of_text: Iterable[str]) -> List[List[float]]:
         """Return embeddings for ``list_of_text`` using the async client."""
@@ -60,7 +55,11 @@ class EmbeddingModel:
 
 
 if __name__ == "__main__":
-    embedding_model = EmbeddingModel()
+    # Load .env file from project root (two levels up from this file)
+    env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+    load_dotenv(env_path, override=True)
+    api_key = os.getenv("OPENAI_API_KEY")
+    embedding_model = EmbeddingModel(api_key=api_key)
     print(asyncio.run(embedding_model.async_get_embedding("Hello, world!")))
     print(
         asyncio.run(
