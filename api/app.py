@@ -18,6 +18,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from aimakerspace.openai_utils.chatmodel import ChatOpenAI
 
+# Global storage for vector database
+global_vector_db = None
 
 # Initialize FastAPI application with a title
 app = FastAPI(title="OpenAI Chat API")
@@ -37,8 +39,6 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     conversation_history: List[Dict[str, Any]] = []  # For back-and-forth
     current_user_message: str
-    system_message: Optional[str] = "You are a helpful assistant."
-    model: Optional[str] = "gpt-4o-mini"  # Note: ChatOpenAI uses gpt-4o-mini by default
     api_key: str  # OpenAI API key for authentication
 
 # Define the main chat endpoint that handles POST requests
@@ -53,8 +53,7 @@ async def chat(request: ChatRequest):
         messages = []
         
         # Add system message
-        if request.system_message:
-            messages.append({"role": "system", "content": request.system_message})
+        messages.append({"role": "system", "content": "You are a helpful health assistant."})
         
         # Add conversation history
         messages.extend(request.conversation_history)
@@ -63,7 +62,7 @@ async def chat(request: ChatRequest):
         messages.append({"role": "user", "content": request.current_user_message})
         
         # Initialize ChatOpenAI
-        chat_model = ChatOpenAI(model_name=request.model, api_key=request.api_key)
+        chat_model = ChatOpenAI(model_name="gpt-4o-mini", api_key=request.api_key)
         
         # Use async streaming method
         async def generate():
@@ -77,8 +76,6 @@ async def chat(request: ChatRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-global_vector_db = None
 
 @app.post("/api/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
@@ -103,12 +100,27 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
         with open(file_path, "wb") as f:
             f.write(content)
 
-        loader = PDFLoader(file_path)
-        loader.load()
-        splitter = CharacterTextSplitter()
-        chunks = splitter.split_texts(loader.documents)
-        vector_db = VectorDatabase(api_key=api_key)
-        global_vector_db = asyncio.run(vector_db.abuild_from_list(chunks))
+        # Add error handling for each major step in the PDF processing pipeline
+        try:
+            loader = PDFLoader(file_path)
+            loader.load()
+        except Exception as e:
+            print(f"Error loading PDF: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to load PDF: {str(e)}")
+
+        try:
+            splitter = CharacterTextSplitter()
+            chunks = splitter.split_texts(loader.documents)
+        except Exception as e:
+            print(f"Error splitting text: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to split PDF text: {str(e)}")
+
+        try:
+            vector_db = VectorDatabase(api_key=api_key)
+            global_vector_db = asyncio.run(vector_db.abuild_from_list(chunks))
+        except Exception as e:
+            print(f"Error building vector database: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to build vector database: {str(e)}")
 
         # delete file_path
         os.remove(file_path)

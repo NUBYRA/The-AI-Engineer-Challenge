@@ -10,20 +10,10 @@ interface ChatMessage {
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gpt-4o-mini');
-  const [systemMessage, setSystemMessage] = useState('You are a helpful health assistant.');
   const [currentMessage, setCurrentMessage] = useState('');
   const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
-
-  const models = [
-    'gpt-4o-mini',
-    'gpt-4o',
-    'gpt-4-turbo',
-    'gpt-4.1-mini',
-    'gpt-3.5-turbo'
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +39,6 @@ export default function Home() {
         body: JSON.stringify({
           conversation_history: updatedHistory,
           current_user_message: messageToSend,
-          system_message: systemMessage,
-          model: model,
           api_key: apiKey,
         }),
       });
@@ -138,36 +126,9 @@ export default function Home() {
               />
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="model">Model:</label>
-              <select
-                id="model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className={styles.select}
-              >
-                {models.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
 
                    <div className={styles.formGroup}>
-                     <label htmlFor="systemMessage">System Message (Optional):</label>
-                     <textarea
-                       id="systemMessage"
-                       value={systemMessage}
-                       onChange={(e) => setSystemMessage(e.target.value)}
-                       placeholder="Enter the system message (optional)"
-                       className={styles.textarea}
-                       rows={2}
-                     />
-                   </div>
-
-                   <div className={styles.formGroup}>
-                     <label htmlFor="pdfUpload">Upload PDF:</label>
+                     <label htmlFor="pdfUpload">Upload Health Record (PDF Only):</label>
                      <input
                        type="file"
                        id="pdfUpload"
