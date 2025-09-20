@@ -143,7 +143,7 @@ class PDFLoader:
 
 
 if __name__ == "__main__":
-    loader = PDFLoader("sample_labcorp.pdf")
+    loader = PDFLoader("% INSPECTION SHEET.pdf")
     loader.load()
     splitter = CharacterTextSplitter()
     chunks = splitter.split_texts(loader.documents)

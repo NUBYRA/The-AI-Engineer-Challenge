@@ -94,10 +94,15 @@ export default function Home() {
       });
       
       const result = await response.json();
-      if (result.message) {
+      if (result.message && result.chunks_created > 0) {
+        // Success: PDF uploaded and processed with text extracted
         setUploadStatus(`✅ ${result.message} (${result.filename || 'File'}, ${result.file_size ? Math.round(result.file_size/1024) + 'KB' : 'Unknown size'})`);
+      } else if (result.message && result.chunks_created === 0) {
+        // PDF uploaded but extraction failed
+        setUploadStatus('❌ PDF extraction unsuccessful - no text could be extracted from the file');
       } else {
-        setUploadStatus('✅ PDF uploaded successfully');
+        // Fallback for unexpected response format
+        setUploadStatus('❌ Upload failed - unexpected response format');
       }
     } catch (error) {
       setUploadStatus('❌ Upload failed - please try again');
