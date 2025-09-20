@@ -165,7 +165,7 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
 
         try:
             vector_db = VectorDatabase(api_key=api_key)
-            global_vector_db = asyncio.run(vector_db.abuild_from_list(chunks))
+            global_vector_db = await vector_db.abuild_from_list(chunks)
         except Exception as e:
             print(f"Error building vector database: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to build vector database: {str(e)}")
