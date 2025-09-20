@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Iterable, List
-import PyPDF2
-from pdf2image import convert_from_path
-import pytesseract
+import fitz  # PyMuPDF
 
 
 class TextFileLoader:
@@ -127,30 +125,21 @@ class PDFLoader:
                 yield self._read_pdf(entry)
 
     def _read_pdf(self, file_path: Path) -> str:
-        # Try PyPDF2 first (faster for text-based PDFs)
+        # Try PyMuPDF first (better PDF handling, no external dependencies)
         try:
-            with file_path.open("rb") as file_handle:
-                pdf_reader = PyPDF2.PdfReader(file_handle)
-                extracted_pages = [page.extract_text() or "" for page in pdf_reader.pages]
-            text = "\n".join(extracted_pages)
-            if text.strip():  # If we got text, use it
+            doc = fitz.open(file_path)
+            text = ""
+            for page_num in range(doc.page_count):
+                page = doc.load_page(page_num)
+                text += page.get_text()
+            doc.close()
+            if text.strip():
+                print(f"PyMuPDF extracted {len(text)} characters")
                 return text
         except Exception as e:
-            print(f"PyPDF2 failed: {e}")
-        
-        # Fallback to OCR for complex/image-based PDFs
-        try:
-            print("Falling back to OCR processing...")
-            images = convert_from_path(file_path)
-            extracted_text = []
-            for i, image in enumerate(images):
-                print(f"Processing page {i+1}/{len(images)} with OCR...")
-                text = pytesseract.image_to_string(image)
-                extracted_text.append(text)
-            return "\n".join(extracted_text)
-        except Exception as e:
-            print(f"OCR processing failed: {e}")
-            return ""
+            print(f"PyMuPDF failed: {e}")
+            raise e
+        return ""
 
 
 if __name__ == "__main__":
