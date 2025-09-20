@@ -179,6 +179,17 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
             print(f"Error splitting text: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to split PDF text: {str(e)}")
 
+        # Check if chunks were created successfully
+        if len(chunks) == 0:
+            # Clean up uploaded file
+            os.remove(file_path)
+            return {
+                "message": "PDF uploaded but no text extracted. Please upload a different file.",
+                "filename": file.filename,
+                "chunks_created": 0,
+                "file_size": len(content)
+            }
+
         try:
             vector_db = VectorDatabase(api_key=api_key)
             global_vector_db = await vector_db.abuild_from_list(chunks)
