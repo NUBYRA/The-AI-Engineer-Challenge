@@ -97,6 +97,7 @@ export default function Home() {
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('api_key', apiKey);
     
     try {
       const response = await fetch('/api/upload-pdf', {
