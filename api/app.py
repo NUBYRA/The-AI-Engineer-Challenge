@@ -44,22 +44,15 @@ def build_enhanced_system_message(user_message: str) -> str:
 
     try:
         # Retrieve the top 3 most relevant document chunks for the user's message.
-        relevant_chunks = global_vector_db.search_by_text(user_message, k=3)
+        relevant_chunks = global_vector_db.search_by_text(user_message, k=5)
 
         # If no relevant chunks are found, return the base system message.
         if not relevant_chunks:
             return base_message
 
-        # Collect only highly relevant chunks (similarity > 0.7) for context.
-        context_parts = [
-            f"• {chunk}"
-            for chunk, similarity in relevant_chunks
-            if similarity > 0.6
-        ]
-
         # If there are relevant context parts, align the system message to include them.
-        if context_parts:
-            context = "\n".join(context_parts)
+        if relevant_chunks:
+            context = "\n".join(relevant_chunks)
             aligned_message = (
                 f"{base_message}\n\n"
                 "IMPORTANT: You have access to uploaded health records. "
