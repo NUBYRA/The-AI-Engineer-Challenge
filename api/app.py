@@ -1,5 +1,5 @@
 # Import required FastAPI components for building the API
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Import Pydantic for data validation and settings management
@@ -9,7 +9,9 @@ from typing import Optional, List, Dict, Any
 import uvicorn
 import sys
 import os
-from aimakerspace.text_utils import PDFLoader
+from aimakerspace.text_utils import PDFLoader, CharacterTextSplitter
+from aimakerspace.vectordatabase import VectorDatabase
+import asyncio
 
 # Add the parent directory to Python path to find aimakerspace module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -76,8 +78,11 @@ async def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+global_vector_db = None
+
 @app.post("/api/upload-pdf")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
+    global global_vector_db
     try:
         # Check if file was uploaded
         if not file.filename:
@@ -98,11 +103,23 @@ async def upload_pdf(file: UploadFile = File(...)):
         with open(file_path, "wb") as f:
             f.write(content)
 
+        loader = PDFLoader(file_path)
+        loader.load()
+        splitter = CharacterTextSplitter()
+        chunks = splitter.split_texts(loader.documents)
+        vector_db = VectorDatabase(api_key=api_key)
+        global_vector_db = asyncio.run(vector_db.abuild_from_list(chunks))
+
+        # delete file_path
+        os.remove(file_path)
+
         return {
-            "message": "PDF uploaded successfully",
+            "message": "PDF uploaded and processed successfully",
             "filename": file.filename,
-            "size": len(content)
+            "chunks_created": len(chunks),
+            "file_size": len(content)
         }
+
     except Exception as e:
         print(f"Upload error: {e}")  # Debug logging
         raise HTTPException(status_code=500, detail=str(e))
