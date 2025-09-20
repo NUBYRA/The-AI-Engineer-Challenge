@@ -29,12 +29,8 @@ def build_enhanced_system_message(user_message: str) -> str:
     """
     global global_vector_db
 
-    base_message = (
-        "You are a helpful health assistant. "
-        "Only answer questions that are related to the uploaded health record. "
-        "If the question is not related to the uploaded health record, "
-        "say 'I'm sorry, I can only answer questions related to the uploaded health record.'"
-    )
+    base_message = ("You are a helpful health assistant. "
+                    "Answer questions about the uploaded health record based on the provided context.")
 
     # If no documents have been uploaded, return the base system message.
     if not global_vector_db:
