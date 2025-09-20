@@ -105,9 +105,13 @@ export default function Home() {
       });
       
       const result = await response.json();
-      setUploadStatus(result.message);
+      if (result.message) {
+        setUploadStatus(`✅ ${result.message} (${result.filename || 'File'}, ${result.size ? Math.round(result.size/1024) + 'KB' : 'Unknown size'})`);
+      } else {
+        setUploadStatus('✅ PDF uploaded successfully');
+      }
     } catch (error) {
-      setUploadStatus('Upload failed');
+      setUploadStatus('❌ Upload failed - please try again');
       console.error('Upload error:', error);
     }
   };
@@ -174,7 +178,15 @@ export default function Home() {
                        className={styles.input}
                      />
                      {uploadStatus && (
-                       <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                       <div style={{ 
+                         marginTop: '0.5rem', 
+                         fontSize: '0.9rem',
+                         padding: '0.5rem',
+                         borderRadius: '4px',
+                         backgroundColor: uploadStatus.includes('successfully') ? '#d4edda' : '#f8d7da',
+                         color: uploadStatus.includes('successfully') ? '#155724' : '#721c24',
+                         border: uploadStatus.includes('successfully') ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
+                       }}>
                          {uploadStatus}
                        </div>
                      )}
