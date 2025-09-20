@@ -137,9 +137,8 @@ async def upload_pdf(file: UploadFile = File(...), api_key: str = Form(...)):
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
-        # Create tmp directory if it doesn't exist (use absolute path)
-        tmp_dir = os.path.join(os.path.dirname(__file__), "uploads")
-        os.makedirs(tmp_dir, exist_ok=True)
+        # Use Vercel's writable /tmp directory
+        tmp_dir = "/tmp"
         
         # Read file content
         content = await file.read()
