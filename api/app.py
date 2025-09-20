@@ -1,5 +1,5 @@
 # Import required FastAPI components for building the API
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 # Import Pydantic for data validation and settings management
@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Any
 import uvicorn
 import sys
 import os
+from aimakerspace.text_utils import PDFLoader
 
 # Add the parent directory to Python path to find aimakerspace module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,6 +73,21 @@ async def chat(request: ChatRequest):
         
         return StreamingResponse(generate(), media_type="text/plain")
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/upload-pdf")
+async def upload_pdf(file: UploadFile = File(...)):
+    try:
+        # Check file type
+        if not file.filename.endswith('.pdf'):
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+
+        # Save the uploaded file
+        with open(f"uploads/{file.filename}", "wb") as f:
+            f.write(await file.read())
+
+        return {"message": "PDF uploaded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

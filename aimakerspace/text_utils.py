@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Iterable, List
-
 import PyPDF2
 
 
