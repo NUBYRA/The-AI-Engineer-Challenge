@@ -52,7 +52,9 @@ def build_enhanced_system_message(user_message: str) -> str:
 
         # If there are relevant context parts, align the system message to include them.
         if relevant_chunks:
-            context = "\n".join(relevant_chunks)
+            # Extract text from tuples (text, similarity_score)
+            context_parts = [chunk[0] for chunk in relevant_chunks]
+            context = "\n".join(context_parts)
             aligned_message = (
                 f"{base_message}\n\n"
                 "IMPORTANT: You have access to uploaded health records. "
