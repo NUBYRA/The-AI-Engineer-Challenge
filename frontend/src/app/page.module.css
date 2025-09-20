@@ -39,8 +39,7 @@
 .chatContainer {
   display: flex;
   height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100vw;
   background: white;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
